@@ -5,18 +5,18 @@ use crate::state::Strategy;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct InstantiateMsg {
-   
 }
 
 #[derive(Serialize, Deserialize, JsonSchema, Clone, Debug)]
 #[serde(rename_all = "snake_case")]
 pub enum ExecuteMsg {
-    ShadeSwap {amount: i32},
+    
     InitializeStrategy{
         owner: String, 
         asset_to_sell: String,
         asset_to_buy: String, 
-        total_amount: i32}
+        total_amount: i32},
+        PerformEncryptedSwap {strategy_id: u32},
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]

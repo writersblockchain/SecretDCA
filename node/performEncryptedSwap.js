@@ -15,10 +15,10 @@ const secretjs = new SecretNetworkClient({
     walletAddress: wallet.address,
   });
 
-const shade_swap = async () => {
+const perform_encrypted_swap = async () => {
   let handleMsg = {
-    shade_swap: {
-       amount: 1000000,
+    perform_encrypted_swap: {
+      strategy_id: 0
     },
   };
   console.log("swapping sUSDC for sSCRT");
@@ -36,4 +36,4 @@ const shade_swap = async () => {
   );
   console.log(tx);
 };
-shade_swap();
+perform_encrypted_swap();

@@ -20,7 +20,7 @@ pub fn instantiate(
 #[entry_point]
 pub fn execute(deps: DepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) -> StdResult<Response> {
     match msg {
-        ExecuteMsg::ShadeSwap {amount} => try_shade_swap(deps, env, &info, amount),
+        ExecuteMsg::PerformEncryptedSwap {strategy_id} => try_perform_encrypted_swap(deps, env, &info, strategy_id),
         ExecuteMsg::InitializeStrategy{
                     owner,
                     asset_to_sell,
@@ -60,14 +60,19 @@ pub fn execute(deps: DepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) -> S
             .add_attribute("strategy_key", strategy_key.to_string()))
     }
     
-
-fn try_shade_swap(
-    _deps: DepsMut,
+fn try_perform_encrypted_swap(
+    deps: DepsMut,
    _env: Env,
    info: &MessageInfo,
-   amount: i32, 
+   strategy_id: u32, 
   
 ) -> StdResult<Response> {
+// Step 1: Query the strategy by the strategy_id
+let strategy = STRATEGIES
+.get(deps.storage, &strategy_id).unwrap(); 
+
+let amount = strategy.total_amount;
+
 // token address + codehash for sUSDC
 let token_in_address = "secret17d24y82ccnar8hlxmlkfur35pykl520hmn4uy0";
 let token_in_code_hash = "1691e4e24714e324a8d2345183027a918bba5c737bb2cbdbedda3cf8e7672faf";
