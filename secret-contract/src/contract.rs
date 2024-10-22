@@ -1,9 +1,9 @@
 use cosmwasm_std::{
-    entry_point, to_binary, Binary, DepsMut, Env, MessageInfo, Response, StdResult, Uint128,
+    entry_point, to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdError, StdResult, Uint128
 };
 
-use crate::msg::{ ExecuteMsg, InstantiateMsg};
-use crate::state::{Hop, RouterInvokeMsg, BLOCK_SIZE};
+use crate::msg::{ ExecuteMsg, InstantiateMsg, QueryMsg, StrategyResponse};
+use crate::state::{Hop, RouterInvokeMsg, Strategy, BLOCK_SIZE, STRATEGIES};
 use secret_toolkit::snip20::send_from_msg_with_code_hash;
 
 #[entry_point]
@@ -21,8 +21,45 @@ pub fn instantiate(
 pub fn execute(deps: DepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) -> StdResult<Response> {
     match msg {
         ExecuteMsg::ShadeSwap {amount} => try_shade_swap(deps, env, &info, amount),
+        ExecuteMsg::InitializeStrategy{
+                    owner,
+                    asset_to_sell,
+                    asset_to_buy,
+                    total_amount,
+            } => try_initialize_strategy(deps, env, &info,  owner,
+                asset_to_sell,
+                asset_to_buy,
+                total_amount),
+    }}
+
+    fn try_initialize_strategy(
+        deps: DepsMut,
+        _env: Env,
+        _info: &MessageInfo,
+        owner: String,
+        asset_to_sell: String,
+        asset_to_buy: String,
+        total_amount: i32,
+    ) -> StdResult<Response> {
+        // Create a new strategy from the input parameters
+        let new_strategy = Strategy {
+            owner,
+            asset_to_sell,
+            asset_to_buy,
+            total_amount,
+        };
+    
+        let strategy_key = STRATEGIES.get_len(deps.storage)?;
+    
+        // Insert the new strategy into the Keymap
+        STRATEGIES.insert(deps.storage, &strategy_key, &new_strategy)?;
+    
+        // Return success response
+        Ok(Response::new()
+            .add_attribute("method", "try_initialize_strategy")
+            .add_attribute("strategy_key", strategy_key.to_string()))
     }
-}
+    
 
 fn try_shade_swap(
     _deps: DepsMut,
@@ -31,8 +68,7 @@ fn try_shade_swap(
    amount: i32, 
   
 ) -> StdResult<Response> {
-
-   // token address + codehash for sUSDC
+// token address + codehash for sUSDC
 let token_in_address = "secret17d24y82ccnar8hlxmlkfur35pykl520hmn4uy0";
 let token_in_code_hash = "1691e4e24714e324a8d2345183027a918bba5c737bb2cbdbedda3cf8e7672faf";
 
@@ -51,23 +87,19 @@ let swap_msg = RouterInvokeMsg::SwapTokensForExact {
    recipient: Some(info.sender.to_string()),
 };
 
-// Serialize the swap message to Binary
 let msg: Option<Binary> = Some(to_binary(&swap_msg)?);
-
-// let amount = 1000000
 
 let uint128amount = convert_to_uint128(amount);
 
 let shade_swap_router_address = "secret137sjm7hgqdp4d0dldqnrxe2ktw02meaygnjd0e".to_string();
 let shade_swap_router_code_hash = "93dac48bf508eeb4c619fcb8b1cb260f9957e31450740a2b7325440ddf92daa8".to_string();
 
-// Use `snip20::send_msg_with_code_hash` to create the CosmosMsg
 let send_msg = send_from_msg_with_code_hash(
     info.sender.to_string(),
     shade_swap_router_address,
     Some(shade_swap_router_code_hash),
     uint128amount,
-    msg,  // Now msg is an Option<Binary>
+    msg,  
     None,
     None,
     BLOCK_SIZE,
@@ -85,3 +117,24 @@ Ok(Response::new()
 fn convert_to_uint128(amount: i32) -> Uint128 {
     Uint128::from(amount as u128)
 }
+
+#[entry_point]
+pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
+    match msg {
+        QueryMsg:: QueryStrategy {
+            id
+        } => to_binary(&query_strategy(deps, id)?),
+    }
+}
+
+fn query_strategy(deps: Deps, id: u32) -> StdResult<StrategyResponse> {
+    let strategy = STRATEGIES
+        .get(deps.storage, &id);
+       
+        match strategy {
+            Some(strategy) => Ok(StrategyResponse{strategy: strategy}),
+            None => Err(StdError::generic_err("strategy doesn't exist")),
+        }
+}
+
+
