@@ -36,7 +36,7 @@ let upload_contract = async () => {
     }
   );
 
-//   console.log(tx)
+  // console.log(tx)
 
   codeId = Number(
     tx.arrayLog.find((log) => log.type === "message" && log.key === "code_id")
@@ -70,13 +70,13 @@ let instantiate_contract = async () => {
     }
   );
 
-  console.log(tx)
-  //Find the contract_address in the logs
-  // const contractAddress = tx.arrayLog.find(
-  //   (log) => log.type === "message" && log.key === "contract_address"
-  // ).value;
+  // console.log(tx)
+  // Find the contract_address in the logs
+  const contractAddress = tx.arrayLog.find(
+    (log) => log.type === "message" && log.key === "contract_address"
+  ).value;
 
-  // console.log("contract address: ", contractAddress);
+  console.log("contract address: ", contractAddress);
 };
 
 // Chain the execution using promises

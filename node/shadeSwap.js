@@ -18,7 +18,7 @@ const secretjs = new SecretNetworkClient({
 const shade_swap = async () => {
   let handleMsg = {
     shade_swap: {
-       amount: 10000000,
+       amount: 1000000,
     },
   };
   console.log("swapping sUSDC for sSCRT");
